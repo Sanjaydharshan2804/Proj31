@@ -1,0 +1,1266 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>E-Consumption Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet">
+
+  <style>
+    /* =====================================================
+   GLOBAL
+===================================================== */
+    * {
+      box-sizing: border-box
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+      background: linear-gradient(135deg, #0f172a 0%, #020617 50%, #0c1222 100%);
+      background-attachment: fixed;
+      color: #e5e7eb;
+      overflow-x: hidden;
+    }
+
+    /* =====================================================
+   STAR CURSOR
+===================================================== */
+    .star {
+      position: fixed;
+      width: 8px;
+      height: 8px;
+      pointer-events: none;
+      background: linear-gradient(135deg, #ff9f0a, #ff375f);
+      clip-path: polygon(50% 0%, 62% 38%, 100% 50%, 62% 62%,
+          50% 100%, 38% 62%, 0% 50%, 38% 38%);
+      animation: fade .6s forwards;
+      z-index: 9999;
+    }
+
+    @keyframes fade {
+      to {
+        transform: scale(0);
+        opacity: 0
+      }
+    }
+
+    /* =====================================================
+   NAVBAR
+===================================================== */
+    .navbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 48px;
+      background: #020617;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, .6);
+    }
+
+    .logo {
+      color: #38bdf8;
+      font-size: 22px;
+      font-weight: 700;
+    }
+
+    .nav span {
+      margin-left: 26px;
+      cursor: pointer;
+      padding: 6px 14px;
+      border-radius: 10px;
+      transition: .3s;
+    }
+
+    .nav span:hover {
+      background: rgba(56, 189, 248, .18);
+    }
+
+    .logout {
+      color: #ef4444
+    }
+
+    /* =====================================================
+   SECTIONS
+===================================================== */
+    .section {
+      padding: 40px
+    }
+
+    .hidden {
+      display: none
+    }
+
+    /* =====================================================
+   SUMMARY CARDS
+===================================================== */
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 26px;
+      margin-bottom: 30px;
+    }
+
+    .card {
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(56, 189, 248, 0.1);
+      padding: 26px;
+      border-radius: 20px;
+      text-align: center;
+      transition: all 0.3s ease;
+      animation: slideUp 0.5s ease-out;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      border-color: rgba(56, 189, 248, 0.3);
+      box-shadow: 0 20px 40px rgba(56, 189, 248, 0.15);
+    }
+
+    .card h2 {
+      background: linear-gradient(135deg, #38bdf8, #22d3ee);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* =====================================================
+   LIMIT
+===================================================== */
+    .limit-set {
+      margin: 24px 0;
+      display: flex;
+      gap: 12px;
+    }
+
+    .limit-set input {
+      padding: 10px;
+      border-radius: 10px;
+      border: none;
+      width: 220px;
+    }
+
+    .limit-set button {
+      padding: 10px 22px;
+      border: none;
+      border-radius: 22px;
+      font-weight: bold;
+      background: #334155;
+      color: #fff;
+      opacity: .5;
+      cursor: pointer;
+    }
+
+    .limit-set button.active {
+      background: #22c55e;
+      color: #020617;
+      opacity: 1;
+      box-shadow: 0 0 18px rgba(34, 197, 94, .6);
+    }
+
+    /* =====================================================
+   APPLIANCES
+===================================================== */
+    .appliances {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 26px;
+      margin: 30px 0;
+    }
+
+    .appliance {
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(56, 189, 248, 0.1);
+      padding: 22px;
+      border-radius: 22px;
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+
+    .appliance:hover {
+      transform: scale(1.03);
+      border-color: rgba(56, 189, 248, 0.3);
+      box-shadow: 0 10px 30px rgba(56, 189, 248, 0.2);
+    }
+
+    .appliance h3 {
+      margin: 10px 0
+    }
+
+    /* ✅ ONLY CHANGE YOU ASKED — SMALL EMOJI SIZE GIF */
+    .appliance img {
+      width: 48px;
+      height: 48px;
+      object-fit: contain;
+      margin: 6px auto 10px;
+      display: block;
+    }
+
+    /* Buttons */
+    button {
+      margin: 6px;
+      padding: 8px 18px;
+      border: none;
+      border-radius: 20px;
+      font-weight: bold;
+      cursor: pointer;
+      opacity: .35;
+      transition: .3s;
+    }
+
+    button.active {
+      opacity: 1;
+      box-shadow: 0 0 12px currentColor;
+    }
+
+    .on {
+      background: #22c55e;
+      color: #020617
+    }
+
+    .off {
+      background: #ef4444;
+      color: white
+    }
+
+    /* =====================================================
+   GRAPHS
+===================================================== */
+    .graphs {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 28px;
+    }
+
+    .graph {
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(56, 189, 248, 0.1);
+      border-radius: 22px;
+      padding: 18px;
+      height: 300px;
+      transition: all 0.3s ease;
+    }
+
+    .graph:hover {
+      border-color: rgba(56, 189, 248, 0.3);
+      box-shadow: 0 10px 30px rgba(56, 189, 248, 0.15);
+    }
+
+    .graph.full {
+      grid-column: 1/-1;
+      height: 360px;
+    }
+
+    .graph canvas {
+      width: 100% !important;
+      height: 100% !important;
+    }
+
+    /* =====================================================
+   PROFILE
+===================================================== */
+    .profile-card {
+      max-width: 780px;
+      margin: auto;
+      background: #0f172a;
+      padding: 36px;
+      border-radius: 26px;
+      display: flex;
+      gap: 30px;
+    }
+
+    .profile-card img {
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+    }
+
+    .profile-card p {
+      margin: 8px 0
+    }
+
+    /* =====================================================
+   TEAM
+===================================================== */
+    .team {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 26px;
+    }
+
+    .member {
+      background: #0f172a;
+      padding: 26px;
+      border-radius: 22px;
+      text-align: center;
+      transition: .35s;
+    }
+
+    .member:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 0 30px rgba(56, 189, 248, .7);
+    }
+
+    .member img {
+      width: 110px;
+      height: 110px;
+      border-radius: 50%;
+    }
+
+    .role {
+      color: #38bdf8;
+      font-size: 14px
+    }
+
+    /* =====================================================
+   CHATBOT STYLES
+===================================================== */
+    /* Floating Chat Button */
+    .chat-button {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #8b5cf6, #6366f1);
+      box-shadow: 0 10px 40px rgba(139, 92, 246, 0.4);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      transition: all 0.3s ease;
+      z-index: 1000;
+      animation: pulse 2s infinite;
+    }
+
+    .chat-button:hover {
+      transform: scale(1.1);
+      box-shadow: 0 15px 50px rgba(139, 92, 246, 0.6);
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        box-shadow: 0 10px 40px rgba(139, 92, 246, 0.4);
+      }
+
+      50% {
+        box-shadow: 0 10px 60px rgba(139, 92, 246, 0.7);
+      }
+    }
+
+    /* Chat Window */
+    .chat-window {
+      position: fixed;
+      bottom: 100px;
+      right: 30px;
+      width: 400px;
+      height: 600px;
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(139, 92, 246, 0.3);
+      border-radius: 24px;
+      box-shadow: 0 20px 80px rgba(0, 0, 0, 0.5);
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+      z-index: 999;
+      animation: slideIn 0.4s ease-out;
+    }
+
+    .chat-window.active {
+      display: flex;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Chat Header */
+    .chat-header {
+      background: linear-gradient(135deg, #8b5cf6, #6366f1);
+      padding: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .chat-header-title {
+      font-weight: 600;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .chat-close {
+      cursor: pointer;
+      font-size: 24px;
+      opacity: 0.8;
+      transition: opacity 0.3s;
+    }
+
+    .chat-close:hover {
+      opacity: 1;
+    }
+
+    /* Chat Messages */
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .chat-messages::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .chat-messages::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .chat-messages::-webkit-scrollbar-thumb {
+      background: rgba(139, 92, 246, 0.5);
+      border-radius: 10px;
+    }
+
+    .message {
+      display: flex;
+      gap: 12px;
+      animation: messageSlide 0.3s ease-out;
+    }
+
+    @keyframes messageSlide {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .message.user {
+      flex-direction: row-reverse;
+    }
+
+    .message-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .message.bot .message-avatar {
+      background: linear-gradient(135deg, #8b5cf6, #6366f1);
+    }
+
+    .message.user .message-avatar {
+      background: linear-gradient(135deg, #38bdf8, #22d3ee);
+    }
+
+    .message-content {
+      max-width: 75%;
+      padding: 12px 16px;
+      border-radius: 18px;
+      line-height: 1.5;
+      font-size: 14px;
+    }
+
+    .message.bot .message-content {
+      background: rgba(139, 92, 246, 0.15);
+      border: 1px solid rgba(139, 92, 246, 0.3);
+      white-space: pre-line;
+    }
+
+    .message.user .message-content {
+      background: linear-gradient(135deg, #38bdf8, #22d3ee);
+      color: #020617;
+      font-weight: 500;
+    }
+
+    /* Suggestions */
+    .suggestions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+      padding-left: 48px;
+    }
+
+    .suggestion-btn {
+      padding: 8px 12px;
+      background: rgba(139, 92, 246, 0.2);
+      border: 1px solid rgba(139, 92, 246, 0.4);
+      border-radius: 16px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.3s;
+      margin: 0;
+      opacity: 1;
+      box-shadow: none;
+    }
+
+    .suggestion-btn:hover {
+      background: rgba(139, 92, 246, 0.3);
+      border-color: rgba(139, 92, 246, 0.6);
+      transform: translateY(-2px);
+    }
+
+    /* Typing Indicator */
+    .typing-indicator {
+      display: none;
+      gap: 4px;
+      padding: 16px;
+      background: rgba(139, 92, 246, 0.15);
+      border: 1px solid rgba(139, 92, 246, 0.3);
+      border-radius: 18px;
+      width: fit-content;
+    }
+
+    .typing-indicator.active {
+      display: flex;
+    }
+
+    .typing-dot {
+      width: 8px;
+      height: 8px;
+      background: #8b5cf6;
+      border-radius: 50%;
+      animation: typingBounce 1.4s infinite ease-in-out;
+    }
+
+    .typing-dot:nth-child(1) {
+      animation-delay: -0.32s;
+    }
+
+    .typing-dot:nth-child(2) {
+      animation-delay: -0.16s;
+    }
+
+    @keyframes typingBounce {
+
+      0%,
+      80%,
+      100% {
+        transform: translateY(0);
+      }
+
+      40% {
+        transform: translateY(-10px);
+      }
+    }
+
+    /* Chat Input */
+    .chat-input-area {
+      padding: 16px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      gap: 12px;
+      background: rgba(15, 23, 42, 0.8);
+    }
+
+    .chat-input {
+      flex: 1;
+      padding: 12px 16px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(139, 92, 246, 0.3);
+      border-radius: 20px;
+      color: #e5e7eb;
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      outline: none;
+      transition: all 0.3s;
+    }
+
+    .chat-input:focus {
+      border-color: rgba(139, 92, 246, 0.6);
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .chat-send-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #8b5cf6, #6366f1);
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s;
+      opacity: 1;
+      margin: 0;
+    }
+
+    .chat-send-btn:hover {
+      transform: scale(1.1);
+      box-shadow: 0 5px 20px rgba(139, 92, 246, 0.5);
+    }
+
+    /* Toast Notifications */
+    .toast {
+      position: fixed;
+      top: 100px;
+      right: 30px;
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      padding: 16px 20px;
+      border-radius: 12px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+      display: none;
+      align-items: center;
+      gap: 12px;
+      z-index: 2000;
+      animation: toastSlide 0.4s ease-out;
+    }
+
+    .toast.active {
+      display: flex;
+    }
+
+    @keyframes toastSlide {
+      from {
+        opacity: 0;
+        transform: translateX(100px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    .toast-icon {
+      font-size: 24px;
+    }
+
+    .toast.success {
+      border-color: rgba(34, 197, 94, 0.5);
+    }
+
+    .toast.info {
+      border-color: rgba(56, 189, 248, 0.5);
+    }
+  </style>
+
+</head>
+
+<body>
+
+  <!-- NAVBAR -->
+  <div class="navbar">
+    <div class="logo">E-Consumption</div>
+    <div class="nav">
+      <span onclick="show('home')">Home</span>
+      <span onclick="show('profile')">Profile</span>
+      <span onclick="show('about')">About</span>
+      <span class="logout">Logout</span>
+    </div>
+  </div>
+
+  <!-- HOME -->
+  <div id="home" class="section">
+    <h1>Electricity Consumption Dashboard</h1>
+
+    <div class="cards">
+      <div class="card">
+        <h3>Current Power</h3>
+        <h2 id="pNow">0 W</h2>
+      </div>
+      <div class="card">
+        <h3>Energy Used</h3>
+        <h2 id="eNow">0.000 kWh</h2>
+      </div>
+      <div class="card">
+        <h3>Estimated Cost</h3>
+        <h2 id="cNow">₹0.00</h2>
+      </div>
+    </div>
+
+    <div class="limit-set">
+      <input id="limitInput" type="number" placeholder="Set energy limit (kWh)">
+      <button id="limitBtn" onclick="setLimit()">Set Limit</button>
+    </div>
+
+    <div class="appliances">
+      <div class="appliance">
+        <img src="./assets/Fan Clip art gif.gif">
+        <button id="fan-on" class="on" onclick="toggle('fan',1)">ON</button>
+        <button id="fan-off" class="off active" onclick="toggle('fan',0)">OFF</button>
+      </div>
+
+      <div class="appliance">
+        <img src="./assets/Light Clip art gif.gif">
+        <button id="light-on" class="on" onclick="toggle('light',1)">ON</button>
+        <button id="light-off" class="off active" onclick="toggle('light',0)">OFF</button>
+      </div>
+
+      <div class="appliance">
+        <img src="./assets/AC Clip art gif.gif">
+        <button id="ac-on" class="on" onclick="toggle('ac',1)">ON</button>
+        <button id="ac-off" class="off active" onclick="toggle('ac',0)">OFF</button>
+      </div>
+
+      <div class="appliance">
+        <img src="./assets/TV Clip art gif.gif">
+        <button id="tv-on" class="on" onclick="toggle('tv',1)">ON</button>
+        <button id="tv-off" class="off active" onclick="toggle('tv',0)">OFF</button>
+      </div>
+    </div>
+
+    <div class="graphs">
+      <div class="graph"><canvas id="powerChart"></canvas></div>
+      <div class="graph"><canvas id="costChart"></canvas></div>
+      <div class="graph"><canvas id="pieChart"></canvas></div>
+      <div class="graph"><canvas id="energyChart"></canvas></div>
+      <div class="graph full"><canvas id="costAppChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- PROFILE -->
+  <div id="profile" class="section hidden">
+    <h1>Consumer Profile</h1>
+    <div class="profile-card">
+      <img src="./imgs member/SD.jpeg">
+      <div>
+        <p><b>Name:</b> Sanjaydharshan R</p>
+        <p><b>Consumer ID:</b> TN-EB-239812</p>
+        <p><b>Meter No:</b> EBX-782341</p>
+        <p><b>Connection:</b> Domestic</p>
+        <p><b>Tariff:</b> LT-1A</p>
+        <p><b>Region:</b> Tamil Nadu</p>
+        <p><b>Status:</b> Active</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ABOUT -->
+  <div id="about" class="section hidden">
+    <h1>Our Team</h1>
+    <div class="team">
+      <div class="member"><img src="./imgs member/SD.jpeg">
+        <h3>Sanjaydharshan</h3>
+        <div class="role">Team Lead</div>
+      </div>
+      <div class="member"><img src="./imgs member/1.png">
+        <h3>Sanjana</h3>
+        <div class="role">UI / UX</div>
+      </div>
+      <div class="member"><img src="./imgs member/3.png">
+        <h3>Subiksha</h3>
+        <div class="role">Frontend</div>
+      </div>
+      <div class="member"><img src="./imgs member/2.png">
+        <h3>Vimal</h3>
+        <div class="role">Research</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* =====================================================
+       BACKEND API CONFIGURATION
+    ===================================================== */
+    const API_URL = 'http://localhost:5000/api/consumption';
+
+    /* =====================================================
+       API HELPER FUNCTIONS
+    ===================================================== */
+    async function loadInitialData() {
+      try {
+        // Load appliance states
+        const stateRes = await fetch(`${API_URL}/state`);
+        const stateData = await stateRes.json();
+
+        if (stateData.success) {
+          state = stateData.data;
+          // Update UI to reflect loaded states
+          for (let device in state) {
+            if (state[device] !== undefined) {
+              document.getElementById(device + "-on").classList.toggle("active", state[device]);
+              document.getElementById(device + "-off").classList.toggle("active", !state[device]);
+            }
+          }
+        }
+
+        // Load consumption data
+        const consumptionRes = await fetch(`${API_URL}/data`);
+        const consumptionData = await consumptionRes.json();
+
+        if (consumptionData.success) {
+          const data = consumptionData.data;
+          energy = data.totalEnergy || 0;
+          usage = data.usage || { fan: 0, light: 0, ac: 0, tv: 0 };
+          limit = data.energyLimit;
+          limitActive = data.limitActive || false;
+
+          // Update limit UI
+          if (limit && limit > 0) {
+            limitInput.value = limit;
+            limitBtn.classList.add("active");
+          }
+        }
+
+        console.log('✅ Data loaded from backend');
+      } catch (error) {
+        console.error('❌ Error loading data from backend:', error);
+      }
+    }
+
+    async function saveApplianceState() {
+      try {
+        await fetch(`${API_URL}/state`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(state)
+        });
+      } catch (error) {
+        console.error('Error saving state:', error);
+      }
+    }
+
+    async function saveConsumptionData() {
+      try {
+        await fetch(`${API_URL}/data`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            totalEnergy: energy,
+            usage: usage,
+            energyLimit: limit,
+            limitActive: limitActive
+          })
+        });
+      } catch (error) {
+        console.error('Error saving consumption:', error);
+      }
+    }
+
+    async function saveEnergyLimit(limitValue) {
+      try {
+        await fetch(`${API_URL}/limit`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ limit: limitValue })
+        });
+      } catch (error) {
+        console.error('Error saving limit:', error);
+      }
+    }
+
+    /* =====================================================
+       STAR CURSOR EFFECT
+    ===================================================== */
+    document.addEventListener("mousemove", e => {
+      const s = document.createElement("div");
+      s.className = "star";
+      s.style.left = e.clientX + "px";
+      s.style.top = e.clientY + "px";
+      document.body.appendChild(s);
+      setTimeout(() => s.remove(), 600);
+    });
+
+    /* =====================================================
+       NAVIGATION
+    ===================================================== */
+    function show(id) {
+      document.querySelectorAll(".section").forEach(s => s.classList.add("hidden"));
+      document.getElementById(id).classList.remove("hidden");
+    }
+
+    /* =====================================================
+       ENERGY LOGIC
+    ===================================================== */
+    const watts = { fan: 75, light: 15, ac: 1500, tv: 120 };
+    let state = { fan: 0, light: 0, ac: 0, tv: 0 };
+    let usage = { fan: 0, light: 0, ac: 0, tv: 0 };
+    let energy = 0, tariff = 6;
+    let limit = null, limitActive = false;
+
+    function setLimit() {
+      limit = parseFloat(limitInput.value);
+      if (limit > 0) {
+        limitActive = true;
+        limitBtn.classList.add("active");
+        saveEnergyLimit(limit);
+      }
+    }
+
+    function toggle(d, v) {
+      state[d] = v;
+      document.getElementById(d + "-on").classList.toggle("active", v);
+      document.getElementById(d + "-off").classList.toggle("active", !v);
+
+      // Save state to backend
+      saveApplianceState();
+    }
+
+    /* =====================================================
+       CHART CONFIGURATION
+    ===================================================== */
+    const axis = {
+      ticks: { color: "#94a3b8" },
+      grid: { color: "rgba(148,163,184,.15)" }
+    };
+
+    /* =====================================================
+       CHART INSTANCES
+    ===================================================== */
+    const powerChart = new Chart(document.getElementById("powerChart"), {
+      type: "line",
+      data: {
+        labels: [], datasets: [{
+          label: "Power (W)",
+          data: [],
+          borderColor: "#38bdf8",
+          fill: true,
+          tension: .4
+        }]
+      },
+      options: { responsive: true, maintainAspectRatio: false, scales: { x: axis, y: { ...axis, min: 0, max: 2000 } } }
+    });
+
+    const costChart = new Chart(document.getElementById("costChart"), {
+      type: "line",
+      data: {
+        labels: [], datasets: [{
+          label: "Cost (₹)",
+          data: [],
+          borderColor: "#fb5607",
+          fill: true,
+          tension: .4
+        }]
+      },
+      options: { responsive: true, maintainAspectRatio: false, scales: { x: axis, y: { ...axis, min: 0, max: 1 } } }
+    });
+
+    const pieChart = new Chart(document.getElementById("pieChart"), {
+      type: "doughnut",
+      data: { labels: Object.keys(watts), datasets: [{ data: [1, 1, 1, 1] }] },
+      options: { responsive: true, maintainAspectRatio: false, cutout: "65%" }
+    });
+
+    const energyChart = new Chart(document.getElementById("energyChart"), {
+      type: "bar",
+      data: { labels: Object.keys(watts), datasets: [{ data: [0, 0, 0, 0], backgroundColor: "#22c55e" }] },
+      options: { responsive: true, maintainAspectRatio: false }
+    });
+
+    const costAppChart = new Chart(document.getElementById("costAppChart"), {
+      type: "bar",
+      data: { labels: Object.keys(watts), datasets: [{ data: [0, 0, 0, 0], backgroundColor: "#fb5607" }] },
+      options: { responsive: true, maintainAspectRatio: false }
+    });
+
+    /* =====================================================
+       LIVE UPDATE LOOP
+    ===================================================== */
+    let saveCounter = 0;
+    setInterval(() => {
+      let p = 0, arr = [];
+      for (let d in watts) {
+        if (state[d]) {
+          p += watts[d];
+          usage[d] += watts[d] / 3600000;
+        }
+        arr.push(state[d] ? watts[d] : 1);
+      }
+
+      if (limitActive && energy >= limit) return;
+
+      energy += p / 3600000;
+
+      pNow.innerText = p + " W";
+      eNow.innerText = energy.toFixed(4) + " kWh";
+      cNow.innerText = "₹" + (energy * tariff).toFixed(2);
+
+      const t = new Date().toLocaleTimeString();
+      powerChart.data.labels.push(t);
+      costChart.data.labels.push(t);
+      powerChart.data.datasets[0].data.push(p);
+      costChart.data.datasets[0].data.push(energy * tariff);
+
+      if (powerChart.data.labels.length > 15) {
+        powerChart.data.labels.shift();
+        costChart.data.labels.shift();
+        powerChart.data.datasets[0].data.shift();
+        costChart.data.datasets[0].data.shift();
+      }
+
+      pieChart.data.datasets[0].data = arr;
+
+      energyChart.data.datasets[0].label = "Energy (kWh)";
+      energyChart.data.datasets[0].data = Object.values(usage);
+
+      costAppChart.data.datasets[0].label = "Cost (₹)";
+      costAppChart.data.datasets[0].data = Object.values(usage).map(v => v * tariff);
+
+      powerChart.update('none');
+      costChart.update('none');
+      pieChart.update('none');
+      energyChart.update('none');
+      costAppChart.update('none');
+
+      // Save consumption data to backend every 10 seconds
+      saveCounter++;
+      if (saveCounter >= 10) {
+        saveConsumptionData();
+        saveCounter = 0;
+      }
+    }, 1000);
+
+    /* =====================================================
+       INITIALIZE - LOAD DATA FROM BACKEND
+    ===================================================== */
+    window.addEventListener('DOMContentLoaded', () => {
+      loadInitialData();
+    });
+  </script>
+
+  <!-- Toast Notification -->
+  <div class="toast" id="toast">
+    <span class="toast-icon">✓</span>
+    <span id="toastMessage">Action completed!</span>
+  </div>
+
+  <!-- Chatbot UI -->
+  <div class="chat-button" id="chatButton" onclick="toggleChat()">
+    💬
+  </div>
+
+  <div class="chat-window" id="chatWindow">
+    <div class="chat-header">
+      <div class="chat-header-title">
+        <span>🤖</span>
+        <span>Energy Assistant</span>
+      </div>
+      <div class="chat-close" onclick="toggleChat()">×</div>
+    </div>
+
+    <div class="chat-messages" id="chatMessages">
+      <div class="message bot">
+        <div class="message-avatar">🤖</div>
+        <div class="message-content">
+          Hi! I'm your Energy Assistant. I can help you reduce electricity costs and optimize your consumption. What
+          would you like to know?
+        </div>
+      </div>
+      <div class="suggestions">
+        <button class="suggestion-btn" onclick="sendMessage('Analyze my consumption')">Analyze consumption</button>
+        <button class="suggestion-btn" onclick="sendMessage('How to reduce my bill?')">Reduce bill</button>
+        <button class="suggestion-btn" onclick="sendMessage('AC optimization tips')">AC tips</button>
+      </div>
+    </div>
+
+    <div class="typing-indicator" id="typingIndicator">
+      <div class="typing-dot"></div>
+      <div class="typing-dot"></div>
+      <div class="typing-dot"></div>
+    </div>
+
+    <div class="chat-input-area">
+      <input type="text" class="chat-input" id="chatInput" placeholder="Ask me anything..."
+        onkeypress="if(event.key==='Enter') sendMessage()">
+      <button class="chat-send-btn" onclick="sendMessage()">
+        ➤
+      </button>
+    </div>
+  </div>
+
+  <script>
+    /* =====================================================
+       CHATBOT FUNCTIONALITY
+    ===================================================== */
+    const CHATBOT_API = 'http://localhost:5000/api/chatbot';
+
+    function toggleChat() {
+      const chatWindow = document.getElementById('chatWindow');
+      chatWindow.classList.toggle('active');
+      if (chatWindow.classList.contains('active')) {
+        document.getElementById('chatInput').focus();
+      }
+    }
+
+    function showToast(message, type = 'success') {
+      const toast = document.getElementById('toast');
+      const toastMessage = document.getElementById('toastMessage');
+
+      toastMessage.textContent = message;
+      toast.className = `toast ${type} active`;
+
+      setTimeout(() => {
+        toast.classList.remove('active');
+      }, 3000);
+    }
+
+    async function sendMessage(text) {
+      const input = document.getElementById('chatInput');
+      const message = text || input.value.trim();
+
+      if (!message) return;
+
+      // Clear input
+      input.value = '';
+
+      // Add user message to chat
+      addMessage(message, 'user');
+
+      // Show typing indicator
+      const typingIndicator = document.getElementById('typingIndicator');
+      typingIndicator.classList.add('active');
+
+      // Scroll to bottom
+      scrollToBottom();
+
+      try {
+        // Send message to backend
+        const response = await fetch(`${CHATBOT_API}/message`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: message })
+        });
+
+        const data = await response.json();
+
+        // Hide typing indicator
+        typingIndicator.classList.remove('active');
+
+        if (data.success) {
+          // Add bot response
+          addMessage(data.response.text, 'bot', data.response.suggestions);
+        } else {
+          addMessage('Sorry, I encountered an error. Please try again.', 'bot');
+        }
+      } catch (error) {
+        console.error('Chat error:', error);
+        typingIndicator.classList.remove('active');
+        addMessage('Sorry, I\'m having trouble connecting. Please make sure the server is running.', 'bot');
+      }
+
+      scrollToBottom();
+    }
+
+    function addMessage(text, sender, suggestions = []) {
+      const messagesContainer = document.getElementById('chatMessages');
+
+      // Create message div
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `message ${sender}`;
+
+      const avatar = document.createElement('div');
+      avatar.className = 'message-avatar';
+      avatar.textContent = sender === 'bot' ? '🤖' : '👤';
+
+      const content = document.createElement('div');
+      content.className = 'message-content';
+      content.textContent = text;
+
+      messageDiv.appendChild(avatar);
+      messageDiv.appendChild(content);
+      messagesContainer.appendChild(messageDiv);
+
+      // Add suggestions if any
+      if (suggestions && suggestions.length > 0) {
+        const suggestionsDiv = document.createElement('div');
+        suggestionsDiv.className = 'suggestions';
+
+        suggestions.forEach(suggestion => {
+          const btn = document.createElement('button');
+          btn.className = 'suggestion-btn';
+          btn.textContent = suggestion;
+          btn.onclick = () => sendMessage(suggestion);
+          suggestionsDiv.appendChild(btn);
+        });
+
+        messagesContainer.appendChild(suggestionsDiv);
+      }
+    }
+
+    function scrollToBottom() {
+      const messagesContainer = document.getElementById('chatMessages');
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    // Auto-analyze on first open (after a delay)
+    let hasAutoAnalyzed = false;
+    document.getElementById('chatButton').addEventListener('click', () => {
+      setTimeout(() => {
+        if (!hasAutoAnalyzed && document.getElementById('chatWindow').classList.contains('active')) {
+          hasAutoAnalyzed = true;
+          // Give a welcome tip after a moment
+          setTimeout(() => {
+            sendMessage('Analyze my consumption');
+          }, 2000);
+        }
+      }, 500);
+    });
+
+    // Enhanced toggle function with toast notification
+    const originalToggle = toggle;
+    window.toggle = function (d, v) {
+      originalToggle(d, v);
+      const status = v ? 'ON' : 'OFF';
+      const deviceName = d.charAt(0).toUpperCase() + d.slice(1);
+      showToast(`${deviceName} turned ${status}`, 'success');
+    };
+
+    // Also show toast when setting limit
+    const originalSetLimit = setLimit;
+    window.setLimit = function () {
+      originalSetLimit();
+      if (limit && limit > 0) {
+        showToast(`Energy limit set to ${limit} kWh`, 'info');
+      }
+    };
+  </script>
+
+</body>
+
+
+</html>
