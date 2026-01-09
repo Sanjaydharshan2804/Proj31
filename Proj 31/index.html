@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>E-Consumption</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+/* =====================================================
+   GLOBAL
+===================================================== */
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:Segoe UI,Arial,sans-serif;
+  background:#020617;
+  color:#e5e7eb;
+  overflow-x:hidden;
+}
+
+/* =====================================================
+   STAR CURSOR
+===================================================== */
+.star{
+  position:fixed;
+  width:8px;height:8px;
+  pointer-events:none;
+  background:linear-gradient(135deg,#ff9f0a,#ff375f);
+  clip-path:polygon(
+    50% 0%,62% 38%,100% 50%,62% 62%,
+    50% 100%,38% 62%,0% 50%,38% 38%
+  );
+  animation:fade .6s forwards;
+  z-index:9999;
+}
+@keyframes fade{
+  to{transform:scale(0);opacity:0}
+}
+
+/* =====================================================
+   NAVBAR
+===================================================== */
+.navbar{
+  position:sticky;
+  top:0;
+  z-index:100;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:16px 48px;
+  background:#020617;
+  box-shadow:0 10px 30px rgba(0,0,0,.6);
+}
+.logo{
+  color:#38bdf8;
+  font-size:22px;
+  font-weight:700;
+}
+.nav span{
+  margin-left:26px;
+  cursor:pointer;
+  padding:6px 14px;
+  border-radius:10px;
+  transition:.3s;
+}
+.nav span:hover{
+  background:rgba(56,189,248,.18);
+}
+.logout{color:#ef4444}
+
+/* =====================================================
+   SECTIONS
+===================================================== */
+.section{padding:40px}
+.hidden{display:none}
+
+/* =====================================================
+   SUMMARY CARDS
+===================================================== */
+.cards{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:26px;
+  margin-bottom:30px;
+}
+.card{
+  background:#0f172a;
+  padding:26px;
+  border-radius:20px;
+  text-align:center;
+}
+.card h2{color:#38bdf8}
+
+/* =====================================================
+   LIMIT
+===================================================== */
+.limit-set{
+  margin:24px 0;
+  display:flex;
+  gap:12px;
+}
+.limit-set input{
+  padding:10px;
+  border-radius:10px;
+  border:none;
+  width:220px;
+}
+.limit-set button{
+  padding:10px 22px;
+  border:none;
+  border-radius:22px;
+  font-weight:bold;
+  background:#334155;
+  color:#fff;
+  opacity:.5;
+  cursor:pointer;
+}
+.limit-set button.active{
+  background:#22c55e;
+  color:#020617;
+  opacity:1;
+  box-shadow:0 0 18px rgba(34,197,94,.6);
+}
+
+/* =====================================================
+   APPLIANCES
+===================================================== */
+.appliances{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:26px;
+  margin:30px 0;
+}
+.appliance{
+  background:#0f172a;
+  padding:22px;
+  border-radius:22px;
+  text-align:center;
+}
+.appliance h3{margin:10px 0}
+
+/* ✅ ONLY CHANGE YOU ASKED — SMALL EMOJI SIZE GIF */
+.appliance img{
+  width:48px;
+  height:48px;
+  object-fit:contain;
+  margin:6px auto 10px;
+  display:block;
+}
+
+/* Buttons */
+button{
+  margin:6px;
+  padding:8px 18px;
+  border:none;
+  border-radius:20px;
+  font-weight:bold;
+  cursor:pointer;
+  opacity:.35;
+  transition:.3s;
+}
+button.active{
+  opacity:1;
+  box-shadow:0 0 12px currentColor;
+}
+.on{background:#22c55e;color:#020617}
+.off{background:#ef4444;color:white}
+
+/* =====================================================
+   GRAPHS
+===================================================== */
+.graphs{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:28px;
+}
+.graph{
+  background:#0f172a;
+  border-radius:22px;
+  padding:18px;
+  height:300px;
+}
+.graph.full{
+  grid-column:1/-1;
+  height:360px;
+}
+.graph canvas{
+  width:100%!important;
+  height:100%!important;
+}
+
+/* =====================================================
+   PROFILE
+===================================================== */
+.profile-card{
+  max-width:780px;
+  margin:auto;
+  background:#0f172a;
+  padding:36px;
+  border-radius:26px;
+  display:flex;
+  gap:30px;
+}
+.profile-card img{
+  width:140px;
+  height:140px;
+  border-radius:50%;
+}
+.profile-card p{margin:8px 0}
+
+/* =====================================================
+   TEAM
+===================================================== */
+.team{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:26px;
+}
+.member{
+  background:#0f172a;
+  padding:26px;
+  border-radius:22px;
+  text-align:center;
+  transition:.35s;
+}
+.member:hover{
+  transform:translateY(-8px);
+  box-shadow:0 0 30px rgba(56,189,248,.7);
+}
+.member img{
+  width:110px;
+  height:110px;
+  border-radius:50%;
+}
+.role{color:#38bdf8;font-size:14px}
+</style>
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+<div class="navbar">
+  <div class="logo">⚡E-Consumption</div>
+  <div class="nav">
+    <span onclick="show('home')">Home</span>
+    <span onclick="show('profile')">Profile</span>
+    <span onclick="show('about')">About</span>
+    <span class="logout">Logout</span>
+  </div>
+</div>
+
+<!-- HOME -->
+<div id="home" class="section">
+<h1>Electricity Consumption Dashboard</h1>
+
+<div class="cards">
+  <div class="card"><h3>Current Power</h3><h2 id="pNow">0 W</h2></div>
+  <div class="card"><h3>Energy Used</h3><h2 id="eNow">0.000 kWh</h2></div>
+  <div class="card"><h3>Estimated Cost</h3><h2 id="cNow">₹0.00</h2></div>
+</div>
+
+<div class="limit-set">
+  <input id="limitInput" type="number" placeholder="Set energy limit (kWh)">
+  <button id="limitBtn" onclick="setLimit()">Set Limit</button>
+</div>
+
+<div class="appliances">
+  <div class="appliance">
+    <img src="./assets/Fan Clip art gif.gif">
+    <button id="fan-on" class="on" onclick="toggle('fan',1)">ON</button>
+    <button id="fan-off" class="off active" onclick="toggle('fan',0)">OFF</button>
+  </div>
+
+  <div class="appliance">
+    <img src="./assets/Light Clip art gif.gif">
+    <button id="light-on" class="on" onclick="toggle('light',1)">ON</button>
+    <button id="light-off" class="off active" onclick="toggle('light',0)">OFF</button>
+  </div>
+
+  <div class="appliance">
+    <img src="./assets/AC Clip art gif.gif">
+    <button id="ac-on" class="on" onclick="toggle('ac',1)">ON</button>
+    <button id="ac-off" class="off active" onclick="toggle('ac',0)">OFF</button>
+  </div>
+
+  <div class="appliance">
+    <img src="./assets/TV Clip art gif.gif">
+    <button id="tv-on" class="on" onclick="toggle('tv',1)">ON</button>
+    <button id="tv-off" class="off active" onclick="toggle('tv',0)">OFF</button>
+  </div>
+</div>
+
+<div class="graphs">
+  <div class="graph"><canvas id="powerChart"></canvas></div>
+  <div class="graph"><canvas id="costChart"></canvas></div>
+  <div class="graph"><canvas id="pieChart"></canvas></div>
+  <div class="graph"><canvas id="energyChart"></canvas></div>
+  <div class="graph full"><canvas id="costAppChart"></canvas></div>
+</div>
+</div>
+
+<!-- PROFILE -->
+<div id="profile" class="section hidden">
+<h1>Consumer Profile</h1>
+<div class="profile-card">
+  <img src="./imgs member/SD.jpeg">
+  <div>
+    <p><b>Name:</b> Sanjaydharshan R</p>
+    <p><b>Consumer ID:</b> TN-EB-239812</p>
+    <p><b>Meter No:</b> EBX-782341</p>
+    <p><b>Connection:</b> Domestic</p>
+    <p><b>Tariff:</b> LT-1A</p>
+    <p><b>Region:</b> Tamil Nadu</p>
+    <p><b>Status:</b> Active</p>
+  </div>
+</div>
+</div>
+
+<!-- ABOUT -->
+<div id="about" class="section hidden">
+<h1>Our Team</h1>
+<div class="team">
+  <div class="member"><img src="./imgs member/SD.jpeg"><h3>Sanjaydharshan</h3><div class="role">Team Lead</div></div>
+  <div class="member"><img src="./imgs member/sanjana br.jpeg"><h3>Sanjana</h3><div class="role">UI / UX</div></div>
+  <div class="member"><img src="./imgs member/subiksha V.jpeg"><h3>Subiksha</h3><div class="role">Frontend</div></div>
+  <div class="member"><img src="./imgs member/Vimal bro.jpeg"><h3>Vimal</h3><div class="role">Research</div></div>
+</div>
+</div>
+
+<script>
+/* STAR */
+document.addEventListener("mousemove",e=>{
+  const s=document.createElement("div");
+  s.className="star";
+  s.style.left=e.clientX+"px";
+  s.style.top=e.clientY+"px";
+  document.body.appendChild(s);
+  setTimeout(()=>s.remove(),600);
+});
+
+/* NAV */
+function show(id){
+  document.querySelectorAll(".section").forEach(s=>s.classList.add("hidden"));
+  document.getElementById(id).classList.remove("hidden");
+}
+
+/* ENERGY LOGIC */
+const watts={fan:75,light:15,ac:1500,tv:120};
+let state={fan:0,light:0,ac:0,tv:0};
+let usage={fan:0,light:0,ac:0,tv:0};
+let energy=0,tariff=6;
+let limit=null,limitActive=false;
+
+function setLimit(){
+  limit=parseFloat(limitInput.value);
+  if(limit>0){
+    limitActive=true;
+    limitBtn.classList.add("active");
+  }
+}
+
+function toggle(d,v){
+  state[d]=v;
+  document.getElementById(d+"-on").classList.toggle("active",v);
+  document.getElementById(d+"-off").classList.toggle("active",!v);
+}
+
+/* AXIS */
+const axis={
+  ticks:{color:"#94a3b8"},
+  grid:{color:"rgba(148,163,184,.15)"}
+};
+
+/* CHARTS */
+const powerChart=new Chart(document.getElementById("powerChart"),{
+  type:"line",
+  data:{labels:[],datasets:[{
+    label:"Power (W)",
+    data:[],
+    borderColor:"#38bdf8",
+    fill:true,
+    tension:.4
+  }]},
+  options:{responsive:true,maintainAspectRatio:false,scales:{x:axis,y:{...axis,min:0,max:2000}}}
+});
+
+const costChart=new Chart(document.getElementById("costChart"),{
+  type:"line",
+  data:{labels:[],datasets:[{
+    label:"Cost (₹)",
+    data:[],
+    borderColor:"#fb5607",
+    fill:true,
+    tension:.4
+  }]},
+  options:{responsive:true,maintainAspectRatio:false,scales:{x:axis,y:{...axis,min:0,max:1}}}
+});
+
+const pieChart=new Chart(document.getElementById("pieChart"),{
+  type:"doughnut",
+  data:{labels:Object.keys(watts),datasets:[{data:[1,1,1,1]}]},
+  options:{responsive:true,maintainAspectRatio:false,cutout:"65%"}
+});
+
+const energyChart=new Chart(document.getElementById("energyChart"),{
+  type:"bar",
+  data:{labels:Object.keys(watts),datasets:[{data:[0,0,0,0],backgroundColor:"#22c55e"}]},
+  options:{responsive:true,maintainAspectRatio:false}
+});
+
+const costAppChart=new Chart(document.getElementById("costAppChart"),{
+  type:"bar",
+  data:{labels:Object.keys(watts),datasets:[{data:[0,0,0,0],backgroundColor:"#fb5607"}]},
+  options:{responsive:true,maintainAspectRatio:false}
+});
+
+/* LIVE UPDATE */
+setInterval(()=>{
+  let p=0,arr=[];
+  for(let d in watts){
+    if(state[d]){
+      p+=watts[d];
+      usage[d]+=watts[d]/3600000;
+    }
+    arr.push(state[d]?watts[d]:1);
+  }
+
+  if(limitActive && energy>=limit) return;
+
+  energy+=p/3600000;
+
+  pNow.innerText=p+" W";
+  eNow.innerText=energy.toFixed(4)+" kWh";
+  cNow.innerText="₹"+(energy*tariff).toFixed(2);
+
+  const t=new Date().toLocaleTimeString();
+  powerChart.data.labels.push(t);
+  costChart.data.labels.push(t);
+  powerChart.data.datasets[0].data.push(p);
+  costChart.data.datasets[0].data.push(energy*tariff);
+
+  if(powerChart.data.labels.length>15){
+    powerChart.data.labels.shift();
+    costChart.data.labels.shift();
+    powerChart.data.datasets[0].data.shift();
+    costChart.data.datasets[0].data.shift();
+  }
+
+ pieChart.data.datasets[0].data = arr;
+
+energyChart.data.datasets[0].label = "Energy (kWh)";
+energyChart.data.datasets[0].data = Object.values(usage);
+
+costAppChart.data.datasets[0].label = "Cost (₹)";
+costAppChart.data.datasets[0].data = Object.values(usage).map(v=>v*tariff);
+
+powerChart.update();
+costChart.update();
+pieChart.update();
+energyChart.update();
+costAppChart.update();
+
+},1000);
+</script>
+
+</body>
+</html>
